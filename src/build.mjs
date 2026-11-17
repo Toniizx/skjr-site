@@ -154,6 +154,17 @@ function caseCard(x, c) {
     </li>`;
 }
 
+function teamFigure(x, extra = '') {
+  const { t } = x;
+  return `<figure class="photo${extra}" data-photo>
+      <div class="photo__frame"><img src="${x.rel(C.teamPhoto)}" width="1294" height="863" loading="lazy" decoding="async"
+        alt="${t('A equipe da SKEMA Consultoria Júnior reunida em frente ao mapa dos campi da SKEMA.',
+          'The SKEMA Consultoria Júnior team in front of the map of SKEMA campuses.',
+          'L’équipe de SKEMA Consultoria Júnior devant la carte des campus SKEMA.')}"></div>
+      <figcaption class="photo__cap">${t('A equipe da SKJR', 'The SKJR team', 'L’équipe SKJR')}</figcaption>
+    </figure>`;
+}
+
 function ctaBand(x, query = '') {
   const { t, href } = x;
   return `
@@ -189,8 +200,9 @@ function home(x) {
         'Research, strategy and marketing that deliver results for your business.',
         'Études, stratégie et marketing au service des résultats de votre entreprise.')}</span>
       <span aria-hidden="true">
-        <span class="rot" data-rot>${words.map((w, i) => `<span class="rot__w${i ? '' : ' is-on'}">${w}</span>`).join('')}</span>
-        <span class="hero__rest">${t('que gera resultado<br>para o seu negócio.', 'that delivers results<br>for your business.', 'au service des résultats<br>de votre entreprise.')}</span>
+        <span class="hl hl--rot"><span class="rot" data-rot>${words.map((w, i) => `<span class="rot__w${i ? '' : ' is-on'}">${w}</span>`).join('')}</span></span>
+        ${t('que gera resultado<br>para o seu negócio.', 'that delivers results<br>for your business.', 'au service des résultats<br>de votre entreprise.')
+          .split('<br>').map(line => `<span class="hl"><span>${line}</span></span>`).join('\n        ')}
       </span>
     </h1>
     <div class="hero__side">
@@ -230,6 +242,11 @@ function home(x) {
   </div>
 </section>
 
+<div class="marquee" aria-hidden="true" data-marquee>
+  <div class="marquee__track">${[0, 1].map(() => `<div class="marquee__set">${C.services.map((s, i) =>
+    `<span class="marquee__item${i % 2 ? ' is-outline' : ''}">${t(s.name)}</span><span class="marquee__sep"></span>`).join('')}</div>`).join('')}</div>
+</div>
+
 <section class="sec about" id="sobre">
   <div class="wrap">
     <h2 class="about__text">${t(
@@ -237,13 +254,13 @@ function home(x) {
       'We are the Brazilian branch of SKEMA Conseil, a French junior enterprise founded in 1969. SKEMA Business School students, mentored by faculty, solving real problems for companies in Minas Gerais.',
       'Nous sommes l’antenne brésilienne de SKEMA Conseil, Junior-Entreprise française fondée en 1969. Des étudiants de SKEMA Business School, encadrés par leurs professeurs, au service des entreprises du Minas Gerais.')}</h2>
     ${C.teamPhoto
-      ? `<figure class="about__photo"><img src="${x.rel(C.teamPhoto)}" alt="${t('Equipe da SKJR em reunião de projeto', 'The SKJR team in a project meeting', 'L’équipe SKJR en réunion de projet')}" loading="lazy"></figure>`
+      ? teamFigure(x)
       : FINAL ? '' : `<figure class="about__photo about__photo--slot"><figcaption>${t(
         'Foto real da equipe em reunião ou com um cliente',
         'A real photo of the team in a meeting or with a client',
         'Une vraie photo de l’équipe en réunion ou avec un client')} <span class="tag-draft">${t('Ilustrativo', 'Illustrative', 'Illustratif')}</span></figcaption></figure>`}
     <dl class="stats" style="--n:${stats.length}">
-      ${stats.map(s => `<div class="stat"><dt class="stat__label">${t(s.label)} ${tag(s)}</dt><dd class="stat__value">${t(s.value)}</dd></div>`).join('\n      ')}
+      ${stats.map(s => `<div class="stat"><dt class="stat__label">${t(s.label)} ${tag(s)}</dt><dd class="stat__value"><span>${t(s.value)}</span></dd></div>`).join('\n      ')}
     </dl>
   </div>
 </section>
@@ -564,6 +581,7 @@ function joinPage(x) {
       'De vrais projets, de vrais clients et un réseau sur quatre continents, dès vos études.')}</p>
     <a class="btn" href="${C.site.instagram}" rel="noopener" target="_blank">${t('Acompanhar o processo seletivo no Instagram', 'Follow the selection process on Instagram', 'Suivre le recrutement sur Instagram')}</a>
   </div>
+  ${C.teamPhoto ? `<div class="wrap phero__photo">${teamFigure(x, ' photo--join')}</div>` : ''}
 </section>
 
 <section class="sec sec--white">

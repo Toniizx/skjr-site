@@ -6,101 +6,201 @@
 
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   let DATA = {};
   try { DATA = JSON.parse($('#page-data').textContent); } catch (e) { /* sem dados */ }
   const T = DATA.i18n || {};
   const fill = (str, map) => str.replace(/\{(\w+)\}/g, (_, k) => map[k] ?? '');
 
-  /* ---------------------------------------------------------- topo e menu -- */
+  /* ------------------------------------------------------------- menu -- */
   const hdr = $('[data-hdr]');
-  if (hdr) {
-    const onScroll = () => hdr.classList.toggle('is-stuck', scrollY > 8);
-    addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-  }
-
   const toggle = $('.hdr__toggle');
   const nav = $('#nav');
+  const menuOpen = () => !!toggle && toggle.getAttribute('aria-expanded') === 'true';
   if (toggle && nav) {
     const set = open => {
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? toggle.dataset.close : toggle.dataset.open);
       nav.classList.toggle('is-open', open);
       document.body.style.overflow = open ? 'hidden' : '';
+      if (open) hdr.classList.remove('is-hidden');
     };
-    toggle.addEventListener('click', () => set(toggle.getAttribute('aria-expanded') !== 'true'));
+    toggle.addEventListener('click', () => set(!menuOpen()));
     nav.addEventListener('click', e => { if (e.target.closest('a')) set(false); });
     addEventListener('keydown', e => {
-      if (e.key === 'Escape' && nav.classList.contains('is-open')) { set(false); toggle.focus(); }
+      if (e.key === 'Escape' && menuOpen()) { set(false); toggle.focus(); }
     });
     matchMedia('(min-width: 1141px)').addEventListener('change', e => { if (e.matches) set(false); });
   }
+  let progress = null;
+  if (hdr) {
+    progress = document.createElement('span');
+    progress.className = 'hdr__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    hdr.append(progress);
+  }
 
   /* ------------------------------------------------ palavra que troca -- */
+  // (com movimento reduzido, o CSS troca o deslize por um fade)
   const rot = $('[data-rot]');
-  if (rot && !reduce) {
+  if (rot) {
     const words = $$('.rot__w', rot);
-    // a largura do bloco acompanha a palavra mais longa, para o título não pular
     let i = 0;
-    setInterval(() => {
+    setTimeout(() => setInterval(() => {
       if (document.hidden) return;
       const cur = words[i];
       i = (i + 1) % words.length;
       const next = words[i];
       cur.classList.remove('is-on'); cur.classList.add('is-off');
       next.classList.remove('is-off');
-      // força o ponto de partida embaixo antes de subir
       next.style.transition = 'none'; next.style.transform = 'translateY(110%)';
-      next.offsetHeight; // reflow
+      next.offsetHeight; // reflow: a próxima palavra parte de baixo
       next.style.transition = ''; next.style.transform = '';
       next.classList.add('is-on');
       setTimeout(() => cur.classList.remove('is-off'), 750);
-    }, 2600);
+    }, 2600), 1200); // espera a entrada do título terminar
   }
 
-  /* ---------------------------------------------- entradas ao rolar -- */
-  const revealTargets = $$('.head, .about__text, .about__photo, .stats, .next__head, .svc__row, .step, .case, .diag__body, .people__group, .quote, .post, .reason, .spec__block, .faq__list');
-  if ('IntersectionObserver' in window && !reduce) {
-    revealTargets.forEach(el => el.classList.add('rv'));
+  /* -------------------------- títulos: palavras sobem por trás da máscara -- */
+  const splitTargets = $$('.head__title, .about__text, .contact__title, .band__title, .phero__title')
+    .filter(el => el.childElementCount === 0 && el.textContent.trim());
+  splitTargets.forEach(el => {
+    const text = el.textContent.trim().replace(/\s+/g, ' ');
+    el.setAttribute('aria-label', text);
+    const inner = document.createElement('span');
+    inner.setAttribute('aria-hidden', 'true');
+    inner.innerHTML = text.split(' ').map((w, i) => `<span class="mw"><span style="--i:${i}">${esc(w)}</span></span>`).join(' ');
+    el.textContent = '';
+    el.append(inner);
+    el.classList.add('is-split');
+  });
+
+  /* ----------------------------------------------- entradas ao rolar -- */
+  const fadeTargets = $$('.head__lead, .about__photo--slot, .svc__row, .case, .diag__body, .people__group, .quote, .post, .reason, .spec__block, .faq__list, .net__side');
+  fadeTargets.forEach(el => el.classList.add('rv'));
+  const ioTargets = [...splitTargets, ...fadeTargets, ...$$('.photo, .stats, .net')];
+  if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(entries => {
       entries.forEach(en => {
         if (!en.isIntersecting) return;
         const el = en.target;
-        const sibs = el.parentElement ? [...el.parentElement.children].filter(c => c.classList.contains('rv')) : [];
-        const idx = Math.max(0, sibs.indexOf(el));
-        el.style.transitionDelay = `${Math.min(idx, 5) * 70}ms`;
+        if (el.classList.contains('rv') && el.parentElement) {
+          const sibs = [...el.parentElement.children].filter(c => c.classList.contains('rv'));
+          el.style.transitionDelay = `${Math.min(Math.max(0, sibs.indexOf(el)), 5) * 80}ms`;
+        }
         el.classList.add('is-in');
         io.unobserve(el);
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    revealTargets.forEach(el => io.observe(el));
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    ioTargets.forEach(el => io.observe(el));
+  } else {
+    ioTargets.forEach(el => el.classList.add('is-in'));
   }
 
-  /* --------------------------------------- manifesto acende no scroll -- */
+  /* ------------------------- efeitos ligados à rolagem (um laço só) -- */
+  const photos = $$('[data-photo] img');
+  const stepLists = $$('.steps');
   const man = $('[data-manifesto]');
-  if (man) {
-    const words = $$('.w', man);
-    if (reduce) {
-      words.forEach(w => w.classList.add('is-lit'));
-    } else {
-      let ticking = false;
-      const update = () => {
-        ticking = false;
-        const r = man.getBoundingClientRect();
-        const vh = innerHeight;
-        // começa a acender quando o topo entra a 85% da tela e termina quando o fim passa de 45%
-        const start = vh * 0.85, end = vh * 0.45;
-        const p = (start - r.top) / ((start - end) + r.height);
-        const lit = Math.round(Math.max(0, Math.min(1, p)) * words.length);
-        words.forEach((w, i) => w.classList.toggle('is-lit', i < lit));
-      };
-      addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-      addEventListener('resize', update);
-      update();
+  const manWords = man ? $$('.w', man) : [];
+  let lastY = scrollY;
+  let ticking = false;
+
+  function frame() {
+    ticking = false;
+    const y = scrollY, vh = innerHeight;
+
+    // topo: some ao descer, volta ao subir; barra de progresso da leitura
+    if (hdr) {
+      hdr.classList.toggle('is-stuck', y > 8);
+      if (Math.abs(y - lastY) > 4) {
+        const hide = y > lastY && y > 360 && !menuOpen() && !hdr.contains(document.activeElement);
+        hdr.classList.toggle('is-hidden', hide);
+      }
+      const max = root.scrollHeight - vh;
+      if (progress) progress.style.transform = `scaleX(${max > 0 ? clamp(y / max, 0, 1) : 0})`;
+    }
+    lastY = y;
+
+    // foto da equipe: a imagem anda mais devagar que a página
+    if (!reduce) photos.forEach(img => {
+      const r = img.parentElement.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > vh) return;
+      const p = clamp((r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2), -1, 1);
+      img.style.transform = `translate3d(0, ${(p * -6).toFixed(2)}%, 0)`;
+    });
+
+    // método: a linha avança passo a passo
+    stepLists.forEach(list => {
+      const items = [...list.children];
+      const r = list.getBoundingClientRect();
+      const start = vh * 0.85, end = vh * 0.4;
+      const p = clamp((start - r.top) / (start - end), 0, 1);
+      items.forEach((s, i) => {
+        const v = clamp(p * items.length - i, 0, 1);
+        s.style.setProperty('--s', v.toFixed(3));
+        s.classList.toggle('is-on', v > 0.4);
+      });
+    });
+
+    // manifesto: as palavras acendem conforme a rolagem
+    if (man) {
+      const r = man.getBoundingClientRect();
+      const start = vh * 0.85, end = vh * 0.45;
+      const lit = Math.round(clamp((start - r.top) / ((start - end) + r.height), 0, 1) * manWords.length);
+      manWords.forEach((w, i) => w.classList.toggle('is-lit', i < lit));
     }
   }
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
+  addEventListener('resize', frame);
+  frame();
+
+  /* -------------------------------- faixa de texto em movimento -- */
+  // O movimento base é uma animação CSS. Aqui só mudamos a velocidade dela:
+  // rolar acelera a faixa, e rolar para cima inverte o sentido.
+  const mq = $('[data-marquee]');
+  const anim = mq && !reduce && $('.marquee__track', mq).getAnimations ? $('.marquee__track', mq).getAnimations()[0] : null;
+  if (anim) {
+    let rate = 1, target = 1, raf = 0, prevY = scrollY;
+    const ease = () => {
+      const dir = target < 0 ? -1 : 1;
+      target += (dir - target) * 0.06;              // o impulso se desfaz aos poucos
+      rate += (target - rate) * 0.12;
+      anim.playbackRate = rate;
+      if (Math.abs(rate - dir) < 0.01 && Math.abs(target - dir) < 0.01) { anim.playbackRate = dir; raf = 0; return; }
+      raf = requestAnimationFrame(ease);
+    };
+    addEventListener('scroll', () => {
+      const dy = scrollY - prevY;
+      prevY = scrollY;
+      if (!dy) return;
+      target = (dy > 0 ? 1 : -1) * (1 + Math.min(Math.abs(dy), 90) / 9);
+      if (!raf) raf = requestAnimationFrame(ease);
+    }, { passive: true });
+  }
+
+  /* ------------------------------------- luz sobre os cards de case -- */
+  if (finePointer) $$('.case__tile').forEach(tile => {
+    tile.addEventListener('pointermove', e => {
+      const r = tile.getBoundingClientRect();
+      tile.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      tile.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+
+  /* ---------------------------------------- botões magnéticos -- */
+  if (finePointer && !reduce) $$('.btn:not(.btn--sm), .wa').forEach(b => {
+    b.addEventListener('pointermove', e => {
+      const r = b.getBoundingClientRect();
+      const dx = (e.clientX - r.left) / r.width - 0.5;
+      const dy = (e.clientY - r.top) / r.height - 0.5;
+      b.style.transform = `translate(${(dx * 12).toFixed(1)}px, ${(dy * 10).toFixed(1)}px)`;
+    });
+    b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+  });
 
   /* -------------------------------------------------- mapa da rede -- */
   const net = $('[data-net]');
@@ -129,14 +229,6 @@
     });
     select('bh');
 
-    // desenha os arcos quando o mapa aparece
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver(([en]) => {
-        if (en.isIntersecting) { net.classList.add('is-in'); io.disconnect(); }
-      }, { threshold: 0.25 });
-      io.observe(net);
-    } else net.classList.add('is-in');
-
     // hora local em cada antena
     const clocks = $$('[data-tz]', net);
     const tick = () => clocks.forEach(c => {
@@ -151,11 +243,21 @@
   }
 
   /* ------------------------------------------------- mini-diagnóstico -- */
+  const form = $('[data-form]');
+  const status = $('[data-form-status]');
+
+  function prefill(text) {
+    if (!form) return;
+    const ta = form.elements.desafio;
+    ta.value = text + (ta.value && !ta.value.startsWith(text) ? '\n\n' + ta.value : '');
+    $('#contato').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    setTimeout(() => form.elements.nome.focus({ preventScroll: true }), reduce ? 0 : 700);
+  }
+
   const diag = $('[data-diag]');
   const out = $('[data-diag-result]');
   if (diag && out && DATA.diag) {
     const D = DATA.diag;
-    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const render = () => {
       const size = diag.elements.size.value;
       const ch = diag.elements.challenge.value;
@@ -181,26 +283,13 @@
   }
 
   /* --------------------------------------------------------- formulário -- */
-  const form = $('[data-form]');
-  const status = $('[data-form-status]');
-
-  function prefill(text) {
-    if (!form) return;
-    const ta = form.elements.desafio;
-    ta.value = text + (ta.value && !ta.value.startsWith(text) ? '\n\n' + ta.value : '');
-    $('#contato').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    setTimeout(() => form.elements.nome.focus({ preventScroll: true }), reduce ? 0 : 600);
-  }
-
-  // vindo de uma página de serviço: ?s=pesquisa
   if (form) {
+    // vindo de uma página de serviço: ?s=pesquisa
     const sid = new URLSearchParams(location.search).get('s');
     if (sid && DATA.services && DATA.services[sid] && T.interest) {
       form.elements.desafio.value = fill(T.interest, { service: DATA.services[sid].name }) + '\n';
     }
-  }
 
-  if (form) {
     const fields = ['nome', 'empresa', 'contato', 'desafio'];
     const setStatus = (msg, bad) => { status.textContent = msg; status.classList.toggle('is-bad', !!bad); };
 

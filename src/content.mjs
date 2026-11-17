@@ -41,8 +41,8 @@ export const stats = [
   { value: L('6', '6', '6'), label: L('antenas da rede SKEMA em 4 continentes', 'SKEMA network branches on 4 continents', 'antennes du réseau SKEMA sur 4 continents') },
 ];
 
-// Foto real da equipe (seção Sobre). Ex.: 'assets/img/equipe/time.jpg' (proporção 21:9)
-export const teamPhoto = '';
+// Foto real da equipe (seção Sobre e página "Faça parte"). Paisagem, ex.: 3:2.
+export const teamPhoto = 'assets/img/equipe/equipe-skjr.webp';
 
 // -----------------------------------------------------------------------------
 //  Clientes (logos). Deixe vazio até ter autorização.

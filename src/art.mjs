@@ -152,7 +152,9 @@ export function worldMap(antennas, lang, label) {
     const mx = (hx + x) / 2, my = (hy + y) / 2;
     const len = Math.hypot(x - hx, y - hy);
     const cx = mx, cy = my - len * 0.24;            // arco curvado para cima
-    return `<path class="map__arc" data-arc="${a.id}" pathLength="1" style="--d:${(0.15 * i).toFixed(2)}s" d="M${hx.toFixed(1)} ${hy.toFixed(1)}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}"/>`;
+    const d = `M${hx.toFixed(1)} ${hy.toFixed(1)}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    return `<path class="map__arc" data-arc="${a.id}" pathLength="1" style="--d:${(0.15 * i).toFixed(2)}s" d="${d}"/>`
+      + `<path class="map__comet" pathLength="1" style="--c:${(1.6 + 0.9 * i).toFixed(2)}s" d="${d}"/>`;
   }).join('');
   const pins = antennas.map(a => {
     const x = px(a.lon).toFixed(1), y = py(a.lat).toFixed(1);
