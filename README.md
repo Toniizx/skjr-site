@@ -48,10 +48,12 @@ No rascunho, os itens que ainda não têm conteúdo real aparecem com a etiqueta
 
 ## Antes de publicar (checklist do benchmarking)
 
-- [ ] 3 a 5 cases reais, com número e autorização do cliente (Comercial + Projetos)
+- [ ] 3 a 5 cases reais, com número e autorização do cliente. Opcional: `photo` (4:3), em que o número vira um selo sobre a foto, e `logo` do cliente (Comercial + Projetos)
 - [ ] Logos de clientes autorizados (`clients`) (Comercial)
 - [ ] Números oficiais: projetos entregues, NPS, membros e anos (`stats`) (Financeiro + RH)
+- [ ] Foto real da equipe em reunião ou com cliente (`teamPhoto`, 21:9) (Marketing)
 - [ ] Fotos da equipe e dos mentores (campo `photo`, retrato 4:5) (Marketing)
+- [ ] Depoimentos reais com `photo` (quadrada) ou `logo` da empresa (Comercial)
 - [ ] Manual de marca: logo e cores. A cor fica em `--cobalt` no CSS e a marca provisória fica em `art.mjs` (Marketing)
 - [ ] Contatos reais em `site` (e-mail, WhatsApp e Instagram), depois `contatosProvisorios: false`
 - [ ] Domínio em `site.url`, que ativa canonical, hreflang, sitemap e robots

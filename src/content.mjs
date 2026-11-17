@@ -30,14 +30,19 @@ export const site = {
 };
 
 // -----------------------------------------------------------------------------
-//  Números  (todos vêm do benchmarking / site atual; acrescente os oficiais)
+//  Números — a faixa segue o benchmarking: projetos entregues, NPS, membros e
+//  rede SKEMA. Números fixos, sem contador animado. O de projetos é ilustrativo:
+//  troque pelo número oficial (Financeiro + RH) e apague `ilustrativo`.
 // -----------------------------------------------------------------------------
 export const stats = [
+  { ilustrativo: true, value: L('00', '00', '00'), label: L('projetos entregues', 'projects delivered', 'projets livrés') },
   { value: L('9,0', '9.0', '9,0'), label: L('NPS dos nossos clientes', 'NPS from our clients', 'NPS de nos clients') },
   { value: L('+40', '40+', '+40'), label: L('estudantes impactados', 'students impacted', 'étudiants impactés') },
-  { value: L('6', '6', '6'), label: L('antenas em 4 continentes', 'branches on 4 continents', 'antennes sur 4 continents') },
-  { value: L('48h', '48h', '48 h'), label: L('para você receber a proposta', 'to receive your proposal', 'pour recevoir votre proposition') },
+  { value: L('6', '6', '6'), label: L('antenas da rede SKEMA em 4 continentes', 'SKEMA network branches on 4 continents', 'antennes du réseau SKEMA sur 4 continents') },
 ];
+
+// Foto real da equipe (seção Sobre). Ex.: 'assets/img/equipe/time.jpg' (proporção 21:9)
+export const teamPhoto = '';
 
 // -----------------------------------------------------------------------------
 //  Clientes (logos). Deixe vazio até ter autorização.
@@ -234,6 +239,8 @@ export const steps = [
 // -----------------------------------------------------------------------------
 //  Cases — TODOS ILUSTRATIVOS. Levantar 3 a 5 reais com autorização do cliente.
 //  `metric` é o número que vai na frente; `service` é o id de um serviço acima.
+//  Opcionais: photo: 'assets/img/cases/x.jpg' (4:3) — o número vira um selo
+//  sobre a foto, como nos cases da BCG — e logo: 'assets/img/clientes/x.svg'.
 // -----------------------------------------------------------------------------
 export const cases = [
   {
@@ -348,6 +355,7 @@ export const areas = L(
 
 // -----------------------------------------------------------------------------
 //  Depoimentos — só reais: nome, cargo, empresa e foto ou logo.
+//  Opcionais: photo: 'assets/img/depoimentos/x.jpg' (quadrada) ou logo: 'assets/img/clientes/x.svg'
 // -----------------------------------------------------------------------------
 export const testimonials = [
   {
@@ -371,10 +379,10 @@ export const testimonials = [
 ];
 
 // -----------------------------------------------------------------------------
-//  Conteúdo (estudos e materiais). Quando houver link real, preencha `href`.
+//  Conteúdo (estudos e materiais do Skope). Quando houver link real, preencha `href`.
 // -----------------------------------------------------------------------------
 export const articles = [
-  { ilustrativo: true, kind: L('Estudo', 'Study', 'Étude'),
+  { ilustrativo: true, kind: L('Estudo do Skope', 'Skope study', 'Étude Skope'),
     title: L('Título do primeiro estudo publicado pela SKJR', 'Title of the first study published by SKJR', 'Titre de la première étude publiée par SKJR'), href: '' },
   { ilustrativo: true, kind: L('Guia', 'Guide', 'Guide'),
     title: L('Título de um guia prático para pequenas empresas', 'Title of a practical guide for small businesses', 'Titre d’un guide pratique pour les petites entreprises'), href: '' },

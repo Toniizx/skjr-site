@@ -61,7 +61,7 @@
   }
 
   /* ---------------------------------------------- entradas ao rolar -- */
-  const revealTargets = $$('.head, .about__text, .stats, .svc__row, .step, .case, .diag__body, .people__group, .quote, .post, .reason, .spec__block, .faq__list');
+  const revealTargets = $$('.head, .about__text, .about__photo, .stats, .next__head, .svc__row, .step, .case, .diag__body, .people__group, .quote, .post, .reason, .spec__block, .faq__list');
   if ('IntersectionObserver' in window && !reduce) {
     revealTargets.forEach(el => el.classList.add('rv'));
     const io = new IntersectionObserver(entries => {

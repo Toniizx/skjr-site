@@ -4,7 +4,8 @@
 //        node src/build.mjs --final    versão para publicar (esconde ilustrativos)
 //  Sem dependências. Gera as páginas em PT (raiz), EN (/en) e FR (/fr).
 // =============================================================================
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as C from './content.mjs';
@@ -15,9 +16,12 @@ const FINAL = process.argv.includes('--final');
 const LANGS = ['pt', 'en', 'fr'];
 const HTML_LANG = { pt: 'pt-BR', en: 'en', fr: 'fr' };
 const live = arr => arr.filter(x => !(FINAL && x.ilustrativo));
+// versão dos arquivos: muda quando o conteúdo muda, para o navegador não usar cache antigo
+const ver = p => createHash('md5').update(readFileSync(path.join(ROOT, 'assets', p))).digest('hex').slice(0, 8);
+const V = { css: ver('css/style.css'), js: ver('js/main.js') };
 
 const cases = live(C.cases), testimonials = live(C.testimonials), articles = live(C.articles),
-  team = live(C.team), selection = live(C.join.selection);
+  team = live(C.team), selection = live(C.join.selection), stats = live(C.stats);
 
 // ------------------------------------------------------------------ rotas ----
 const routes = {
@@ -136,14 +140,17 @@ function methodList(x) {
 function caseCard(x, c) {
   const { t, href, tag } = x;
   const s = svcById(c.service);
-  return `<li class="case">
+  return `<li class="case${c.photo ? ' case--photo' : ''}">
       <div class="case__tile">
-        <p class="case__metric">${t(c.metric)}</p>
-        <p class="case__unit">${t(c.unit)}</p>
+        ${c.photo ? `<img class="case__img" src="${x.rel(c.photo)}" alt="" loading="lazy">` : ''}
+        <div class="case__seal">
+          <p class="case__metric">${t(c.metric)}</p>
+          <p class="case__unit">${t(c.unit)}</p>
+        </div>
         ${tag(c)}
       </div>
       <h3 class="case__title">${t(c.title)}</h3>
-      <p class="case__meta"><span>${t(c.client)}</span><a href="${href('svc:' + s.id)}">${t(s.name)}</a></p>
+      <p class="case__meta">${c.logo ? `<img class="case__logo" src="${x.rel(c.logo)}" alt="" loading="lazy">` : ''}<span>${t(c.client)}</span><a href="${href('svc:' + s.id)}">${t(s.name)}</a></p>
     </li>`;
 }
 
@@ -229,8 +236,14 @@ function home(x) {
       'Somos a antena brasileira da SKEMA Conseil, empresa júnior francesa fundada em 1969. Estudantes da SKEMA Business School, orientados por professores, resolvendo problemas reais de empresas mineiras.',
       'We are the Brazilian branch of SKEMA Conseil, a French junior enterprise founded in 1969. SKEMA Business School students, mentored by faculty, solving real problems for companies in Minas Gerais.',
       'Nous sommes l’antenne brésilienne de SKEMA Conseil, Junior-Entreprise française fondée en 1969. Des étudiants de SKEMA Business School, encadrés par leurs professeurs, au service des entreprises du Minas Gerais.')}</h2>
-    <dl class="stats">
-      ${C.stats.map(s => `<div class="stat"><dt class="stat__label">${t(s.label)}</dt><dd class="stat__value">${t(s.value)}</dd></div>`).join('\n      ')}
+    ${C.teamPhoto
+      ? `<figure class="about__photo"><img src="${x.rel(C.teamPhoto)}" alt="${t('Equipe da SKJR em reunião de projeto', 'The SKJR team in a project meeting', 'L’équipe SKJR en réunion de projet')}" loading="lazy"></figure>`
+      : FINAL ? '' : `<figure class="about__photo about__photo--slot"><figcaption>${t(
+        'Foto real da equipe em reunião ou com um cliente',
+        'A real photo of the team in a meeting or with a client',
+        'Une vraie photo de l’équipe en réunion ou avec un client')} <span class="tag-draft">${t('Ilustrativo', 'Illustrative', 'Illustratif')}</span></figcaption></figure>`}
+    <dl class="stats" style="--n:${stats.length}">
+      ${stats.map(s => `<div class="stat"><dt class="stat__label">${t(s.label)} ${tag(s)}</dt><dd class="stat__value">${t(s.value)}</dd></div>`).join('\n      ')}
     </dl>
   </div>
 </section>
@@ -383,7 +396,13 @@ ${testimonials.length ? `<section class="sec" id="depoimentos">
     <ul class="quotes">
       ${testimonials.map(q => `<li class="quote">
         <blockquote><p>${t(q.quote)}</p></blockquote>
-        <p class="quote__by"><strong>${t(q.name)}</strong><span>${t(q.role)}</span>${tag(q)}</p>
+        <div class="quote__by">
+          ${q.photo || q.logo
+            ? `<img class="quote__img${q.logo && !q.photo ? ' quote__img--logo' : ''}" src="${x.rel(q.photo || q.logo)}" alt="" loading="lazy">`
+            : FINAL ? '' : `<span class="quote__img quote__img--slot" aria-hidden="true">${t('foto ou logo', 'photo or logo', 'photo ou logo')}</span>`}
+          <p><strong>${t(q.name)}</strong><span>${t(q.role)}</span></p>
+          ${tag(q)}
+        </div>
       </li>`).join('\n      ')}
     </ul>
   </div>
@@ -394,9 +413,9 @@ ${articles.length ? `<section class="sec${testimonials.length ? ' sec--white' : 
     <div class="head">
       <h2 class="head__title">${t('Estudos e materiais', 'Studies and resources', 'Études et ressources')}</h2>
       <p class="head__lead">${t(
-        'O que aprendemos nos projetos, aberto para quem empreende em Minas.',
-        'What we learn in our projects, open to anyone doing business in Minas Gerais.',
-        'Ce que nous apprenons dans nos projets, ouvert à ceux qui entreprennent au Minas Gerais.')}</p>
+        'Os estudos do Skope e o que aprendemos nos projetos, abertos para quem empreende em Minas.',
+        'Skope studies and what we learn in our projects, open to anyone doing business in Minas Gerais.',
+        'Les études Skope et ce que nous apprenons dans nos projets, ouverts à ceux qui entreprennent au Minas Gerais.')}</p>
     </div>
     <ul class="posts">
       ${articles.map(a => `<li class="post">
@@ -408,7 +427,11 @@ ${articles.length ? `<section class="sec${testimonials.length ? ' sec--white' : 
   </div>
 </section>` : ''}
 
-<section class="doors" aria-label="${t('Por onde começar', 'Where to start', 'Par où commencer')}">
+<section class="next" aria-labelledby="proximo">
+  <div class="wrap next__head">
+    <h2 class="head__title" id="proximo">${t('Qual é o seu próximo passo?', 'What is your next step?', 'Quelle est votre prochaine étape ?')}</h2>
+  </div>
+  <div class="doors">
   <a class="door door--hire" href="#contato">
     <span class="door__title">${t('Quero contratar', 'I want to hire SKJR', 'Je veux faire appel à SKJR')}</span>
     <span class="door__text">${t('Para empresas: resposta em até 24h e proposta em até 48h.', 'For companies: a reply within 24h and a proposal within 48h.', 'Pour les entreprises : réponse sous 24 h et proposition sous 48 h.')}</span>
@@ -419,6 +442,7 @@ ${articles.length ? `<section class="sec${testimonials.length ? ' sec--white' : 
     <span class="door__text">${t('Para estudantes da SKEMA em Belo Horizonte: veja como funciona o processo seletivo.', 'For SKEMA students in Belo Horizonte: see how the selection process works.', 'Pour les étudiants de SKEMA à Belo Horizonte : découvrez le processus de recrutement.')}</span>
     <span class="door__go">${icon.arrow}</span>
   </a>
+  </div>
 </section>
 
 <section class="sec contact" id="contato">
@@ -653,7 +677,7 @@ ${LANGS.map(l => `<link rel="alternate" hreflang="${HTML_LANG[l]}" href="${abs(l
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..600;1,8..60,300..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="${asset('css/style.css')}">
+<link rel="stylesheet" href="${asset('css/style.css')}?v=${V.css}">
 <script type="application/ld+json">${JSON.stringify(jsonld)}</script>
 </head>
 <body class="page-${key.split(':')[0]}">
@@ -661,7 +685,7 @@ ${header(x)}
 ${body}
 ${footer(x)}
 ${pageData(x)}
-<script src="${asset('js/main.js')}" defer></script>
+<script src="${asset('js/main.js')}?v=${V.js}" defer></script>
 </body>
 </html>
 `;
@@ -720,6 +744,7 @@ if (C.site.url) {
 // ---------------------------------------------------------------- resumo ----
 const pend = [];
 const n = (arr, name) => { const k = arr.filter(i => i.ilustrativo).length; if (k) pend.push(`${k} ${name}`); };
+n(C.stats, 'número(s) da faixa sem valor oficial'); if (!C.teamPhoto) pend.push('sem foto real da equipe (teamPhoto)');
 n(C.cases, 'case(s) ilustrativo(s)'); n(C.testimonials, 'depoimento(s) ilustrativo(s)'); n(C.team, 'membro(s) da equipe sem nome/foto');
 n(C.articles, 'conteúdo(s) ilustrativo(s)'); n(C.join.selection, 'etapa(s) do processo seletivo a confirmar');
 if (!C.clients.length) pend.push('nenhum logo de cliente');
