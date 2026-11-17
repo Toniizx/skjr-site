@@ -101,6 +101,41 @@
     ioTargets.forEach(el => el.classList.add('is-in'));
   }
 
+  /* ------------- desenho das cidades: no celular, a tela é estreita demais
+     para o desenho inteiro. Ele começa quando aparece na tela e percorre as
+     cidades conforme a pessoa rola, desenhando cada uma quando ela surge. -- */
+  const panel = $('.panel');
+  const panIn = panel ? $('.panel__in', panel) : null;
+  const strokes = panel ? $$('.draw', panel).map(el => ({ el, x: +el.dataset.x || 0, done: false })) : [];
+  const panMQ = matchMedia('(max-width: 1079px)');
+  let panSeen = false;
+  function pan() {
+    if (!panIn) return;
+    if (!panMQ.matches) { panIn.style.transform = ''; return; }
+    if (!panSeen) return;
+    const pw = panel.clientWidth, iw = panIn.offsetWidth, over = Math.max(0, iw - pw);
+    let off = 0;
+    if (!reduce && over) {
+      const top = panel.getBoundingClientRect().top + scrollY;
+      // termina quando o painel chega perto do topo, ainda inteiro na tela
+      const range = Math.max(240, top - innerHeight * 0.12);
+      off = clamp(scrollY / range, 0, 1) * over;
+      panIn.style.transform = `translate3d(${(-off).toFixed(1)}px, 0, 0)`;
+    }
+    const edge = reduce ? Infinity : (off + pw) / (iw / 1600) + 40;   // em unidades do desenho
+    strokes.forEach(st => { if (!st.done && st.x <= edge) { st.el.classList.add('is-go'); st.done = true; } });
+  }
+  if (panel) {
+    if ('IntersectionObserver' in window) {
+      const pio = new IntersectionObserver(([e]) => {
+        if (e.intersectionRatio < 0.4) return;
+        pio.disconnect();
+        setTimeout(() => { panSeen = true; pan(); }, 350);   // deixa o título entrar primeiro
+      }, { threshold: [0, 0.4, 0.8] });
+      pio.observe(panel);
+    } else { panSeen = true; }
+  }
+
   /* ------------------------- efeitos ligados à rolagem (um laço só) -- */
   const photos = $$('[data-photo] img');
   const stepLists = $$('.steps');
@@ -124,6 +159,8 @@
       if (progress) progress.style.transform = `scaleX(${max > 0 ? clamp(y / max, 0, 1) : 0})`;
     }
     lastY = y;
+
+    pan();
 
     // foto da equipe: a imagem anda mais devagar que a página
     if (!reduce) photos.forEach(img => {
@@ -240,6 +277,35 @@
     });
     tick();
     setInterval(tick, 30000);
+  }
+
+  /* -------------------------------------------- equipe por área -- */
+  const teamBox = $('[data-team]');
+  if (teamBox && DATA.areas) {
+    const bar = $('[data-areas]', teamBox);
+    const btns = $$('.area-btn', bar);
+    const info = $('.area-info', teamBox);
+    const nameEl = $('[data-area-name]', teamBox);
+    const textEl = $('[data-area-text]', teamBox);
+    const people = $$('[data-team-list] .person', teamBox);
+    bar.hidden = false;
+    const show = (id, btn) => {
+      const a = DATA.areas[id];
+      if (!a) return;
+      btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.area === id)));
+      nameEl.textContent = a.name;
+      textEl.textContent = a.text;
+      people.forEach(p => { p.hidden = !(id === 'all' || p.dataset.area === id); p.classList.remove('is-enter'); });
+      info.classList.remove('is-new');
+      info.offsetHeight; // reflow: reinicia a animação
+      info.classList.add('is-new');
+      let k = 0;
+      people.forEach(p => { if (!p.hidden) { p.style.setProperty('--k', k++); p.classList.add('is-enter'); } });
+      if (btn && bar.scrollWidth > bar.clientWidth) {
+        bar.scrollTo({ left: btn.offsetLeft - bar.clientWidth / 2 + btn.offsetWidth / 2, behavior: reduce ? 'auto' : 'smooth' });
+      }
+    };
+    btns.forEach(b => b.addEventListener('click', () => show(b.dataset.area, b)));
   }
 
   /* ------------------------------------------------- mini-diagnóstico -- */

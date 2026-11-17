@@ -341,17 +341,58 @@ export const mentors = [
   { name: 'Dorival Guimarães' },
 ];
 
+// Áreas da SKJR. O texto de cada uma aparece quando o visitante a seleciona.
+export const departments = [
+  { id: 'adm', name: L('Administração', 'Administration', 'Administration'),
+    text: L('Coordena a empresa como um todo: planejamento, metas e a relação com a SKEMA Conseil e a SKEMA Business School.',
+            'Runs the company as a whole: planning, targets and the relationship with SKEMA Conseil and SKEMA Business School.',
+            'Pilote l’entreprise dans son ensemble : planification, objectifs et relation avec SKEMA Conseil et SKEMA Business School.') },
+  { id: 'projetos', name: L('Projetos', 'Projects', 'Projets'),
+    text: L('Conduz os projetos dos clientes, do diagnóstico à entrega, com a mentoria dos professores.',
+            'Runs client projects from diagnosis to delivery, with faculty mentoring.',
+            'Mène les projets clients, du diagnostic à la livraison, avec le mentorat des professeurs.') },
+  { id: 'comercial', name: L('Comercial', 'Sales', 'Commercial'),
+    text: L('Atende quem chega, faz a conversa de diagnóstico e monta as propostas em até 48h.',
+            'Welcomes new contacts, leads the diagnosis conversation and prepares proposals within 48h.',
+            'Accueille les nouveaux contacts, mène l’échange de diagnostic et prépare les propositions sous 48 h.') },
+  { id: 'marketing', name: L('Marketing', 'Marketing', 'Marketing'),
+    text: L('Cuida da marca SKJR, das redes sociais e dos materiais que mostram o nosso trabalho.',
+            'Looks after the SKJR brand, social media and the materials that show our work.',
+            'Gère la marque SKJR, les réseaux sociaux et les supports qui présentent notre travail.') },
+  { id: 'inovacao', name: L('Inovação', 'Innovation', 'Innovation'),
+    text: L('Cria novos serviços, ferramentas e processos para a SKJR, como este site.',
+            'Builds new services, tools and processes for SKJR, like this website.',
+            'Crée de nouveaux services, outils et processus pour SKJR, comme ce site.') },
+  { id: 'financeiro', name: L('Financeiro', 'Finance', 'Finance'),
+    text: L('Cuida do orçamento, dos contratos e da saúde financeira da empresa.',
+            'Manages the budget, contracts and the company’s financial health.',
+            'Gère le budget, les contrats et la santé financière de l’entreprise.') },
+  { id: 'rh', name: L('RH', 'HR', 'RH'),
+    text: L('Conduz o processo seletivo, as capacitações e a cultura da equipe.',
+            'Runs the selection process, training and team culture.',
+            'Pilote le recrutement, les formations et la culture d’équipe.') },
+];
+
+// Membros. `area` é o id de uma área acima. Troque os ilustrativos pelos reais
+// (nome, cargo e photo: 'assets/img/equipe/nome.jpg', retrato 4:5) e apague `ilustrativo`.
+const slot = (area, pt, en, fr) => ({
+  ilustrativo: true, area, name: L('Nome do membro', 'Member name', 'Nom du membre'),
+  role: L(`Diretor(a) de ${pt}`, `Head of ${en}`, `Responsable ${fr}`),
+});
 export const team = [
-  { ilustrativo: true, name: L('Nome do membro', 'Member name', 'Nom du membre'), role: L('Presidência', 'Presidency', 'Présidence') },
-  { ilustrativo: true, name: L('Nome do membro', 'Member name', 'Nom du membre'), role: L('Projetos', 'Projects', 'Projets') },
-  { ilustrativo: true, name: L('Nome do membro', 'Member name', 'Nom du membre'), role: L('Comercial', 'Sales', 'Commercial') },
-  { ilustrativo: true, name: L('Nome do membro', 'Member name', 'Nom du membre'), role: L('Inovação', 'Innovation', 'Innovation') },
+  slot('adm', 'Administração', 'Administration', 'administration'),
+  slot('projetos', 'Projetos', 'Projects', 'projets'),
+  slot('comercial', 'Comercial', 'Sales', 'commercial'),
+  slot('marketing', 'Marketing', 'Marketing', 'marketing'),
+  slot('inovacao', 'Inovação', 'Innovation', 'innovation'),
+  slot('financeiro', 'Financeiro', 'Finance', 'finance'),
+  slot('rh', 'RH', 'HR', 'RH'),
 ];
 
 export const areas = L(
-  'Presidência, Projetos, Comercial, Marketing, Inovação, Financeiro e RH',
-  'Presidency, Projects, Sales, Marketing, Innovation, Finance and HR',
-  'Présidence, Projets, Commercial, Marketing, Innovation, Finance et RH');
+  'Administração, Projetos, Comercial, Marketing, Inovação, Financeiro e RH',
+  'Administration, Projects, Sales, Marketing, Innovation, Finance and HR',
+  'Administration, Projets, Commercial, Marketing, Innovation, Finance et RH');
 
 // -----------------------------------------------------------------------------
 //  Depoimentos — só reais: nome, cargo, empresa e foto ou logo.

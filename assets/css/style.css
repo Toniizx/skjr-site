@@ -133,6 +133,13 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .skyline__names text { font: 500 15px var(--sans); fill: var(--muted); }
 .draw { stroke-dasharray: 1.01; stroke-dashoffset: 1.01; animation: draw 1.5s var(--ease) var(--d, 0s) forwards; }
 .draw.is-ground { animation-duration: 2.2s; }
+@media (max-width: 1079px) {
+  .js .panel { overflow: hidden; }
+  .js .panel .draw { animation-play-state: paused; animation-delay: var(--j, 0s); }
+  .js .panel .draw.is-go { animation-play-state: running; }
+  .js .panel__in { will-change: transform; }
+  .js .panel .draw.is-ground { animation-duration: 3.4s; }
+}
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
 /* -------------------------------------------------------------- faixa -- */
@@ -317,10 +324,31 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 
 /* -------------------------------------------------------------- equipe -- */
 .people { display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 24px; row-gap: 56px; }
-.people__group { grid-column: span 6; }
+.people__group { grid-column: 1 / -1; }
 .people__h { font: 500 1.375rem/1.2 var(--serif); padding-bottom: 14px; border-bottom: 1px solid var(--ink); margin-bottom: 28px; }
-.people__areas { color: var(--muted); max-width: 30em; margin-bottom: 28px; }
-.people__list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px 16px; }
+.people__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 32px 16px; }
+
+/* seletor de áreas da equipe */
+.areas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.areas[hidden] { display: none; }
+.area-btn {
+  padding: 11px 16px; border: 1px solid var(--rule); border-radius: 2px; font-weight: 500; font-size: .9375rem; white-space: nowrap;
+  transition: background-color .25s, color .25s, border-color .25s;
+}
+.area-btn:hover { border-color: var(--cobalt); color: var(--cobalt); }
+.area-btn[aria-pressed="true"] { background: var(--cobalt); border-color: var(--cobalt); color: #fff; }
+.area-info { margin-bottom: 32px; max-width: 44em; min-height: 5.5em; }
+.area-info__name { font: 400 clamp(1.5rem, 2.4vw, 2rem)/1.15 var(--serif); letter-spacing: -.01em; }
+.area-info__text { color: var(--muted); margin-top: 8px; }
+.area-info.is-new > * { animation: rise .5s var(--ease) both; }
+.area-info.is-new > * + * { animation-delay: .06s; }
+.person.is-enter { animation: rise .55s var(--ease) both; animation-delay: calc(var(--k, 0) * 60ms); }
+
+/* página Faça parte: as áreas e o que cada uma faz */
+.depts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 24px; }
+.dept { border-top: 1px solid var(--rule); padding-top: 16px; }
+.dept__name { font: 400 1.5rem/1.2 var(--serif); letter-spacing: -.008em; }
+.dept__text { color: var(--muted); margin-top: 8px; max-width: 26em; }
 .person__ph {
   width: 100%; max-width: 180px; aspect-ratio: 4 / 5; object-fit: cover; display: flex; align-items: flex-end; padding: 14px;
   background-color: var(--glaze); border: 1px solid var(--line); border-radius: 2px; color: var(--cobalt);
@@ -490,7 +518,7 @@ img.person__ph { padding: 0; }
 @keyframes marquee { to { transform: translate3d(-50%, 0, 0); } }
 .marquee__set { display: flex; align-items: center; flex: none; }
 .marquee__item { font: 400 clamp(2.25rem, 5.6vw, 5.25rem)/1.1 var(--serif); letter-spacing: -.022em; white-space: nowrap; padding-inline: clamp(20px, 2.6vw, 40px); }
-.marquee__item.is-outline { color: transparent; -webkit-text-stroke: 1.2px var(--cobalt); }
+.marquee__item.is-alt { color: var(--cobalt); font-style: italic; }
 .marquee__sep { width: clamp(10px, 1.1vw, 16px); height: clamp(10px, 1.1vw, 16px); background: var(--cobalt); flex: none; }
 
 /* números: a régua se desenha e os valores sobem */
@@ -558,8 +586,8 @@ img.person__ph { padding: 0; }
   .cases { grid-template-columns: 1fr 1fr; }
   .diag__intro, .diag__body { grid-column: 1 / -1; }
   .net__map, .net__side { grid-column: 1 / -1; }
-  .people__group { grid-column: 1 / -1; }
   .people__list { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .depts { grid-template-columns: 1fr 1fr; }
   .posts, .reasons { grid-template-columns: 1fr 1fr; }
   .contact__intro, .form { grid-column: 1 / -1; }
   .ftr__in { grid-template-columns: 1fr 1fr; }
@@ -580,6 +608,9 @@ img.person__ph { padding: 0; }
   .stat { padding-right: 12px; }
   .stat:nth-child(even) { padding-left: 16px; }
   .chip span { padding: 11px 14px; }
+  .areas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); }
+  .areas::-webkit-scrollbar { display: none; }
+  .depts { grid-template-columns: 1fr; }
   .doors { grid-template-columns: 1fr; }
   .door { min-height: 260px; }
   .map__name { display: none; }
@@ -609,6 +640,7 @@ img.person__ph { padding: 0; }
   .js .photo.is-in .photo__frame { opacity: 1; }
   .js .photo .photo__cap { transform: none; }
   .marquee__track { animation: none; }
+  .js .panel { overflow-x: auto; }
   .map__comet { display: none; }
   .map__pin.is-on .map__ring { animation: none; opacity: 1; }
   .svc__row:hover .svc__name, .door:hover .door__go, .case:hover .case__seal, .wa:hover { transform: none; }

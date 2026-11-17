@@ -19,8 +19,12 @@ export const mark = `<svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><r
 export function skyline(label, cities) {
   let n = 0;
   // cada traço se desenha da esquerda para a direita
-  const p = (d, x, cls = '') =>
-    `<path class="draw ${cls}" pathLength="1" style="--d:${(0.25 + (x / 1600) * 1.5 + (n++ % 3) * 0.04).toFixed(2)}s" d="${d}"/>`;
+  // --d: atraso no desktop (da esquerda para a direita); --j: pequeno atraso
+  // quando a cidade é desenhada ao aparecer na tela (celular); data-x: posição.
+  const p = (d, x, cls = '') => {
+    const k = n++ % 3;
+    return `<path class="draw ${cls}" pathLength="1" data-x="${x}" style="--d:${(0.25 + (x / 1600) * 1.5 + k * 0.04).toFixed(2)}s;--j:${(k * 0.14).toFixed(2)}s" d="${d}"/>`;
+  };
   const palm = (x, top, s = 1, trunk = true) => {
     const f = [
       'Q-18 -22 -40 -6', 'Q-12 -34 -32 -32', 'Q-2 -38 -6 -48',
@@ -58,7 +62,7 @@ export function skyline(label, cities) {
     // Lille: beffroi e casas flamengas
     p('M902 300V152H926V300M906 152V118H922V152M904 118H924L914 82Z', 914, 'is-solid'),
     p('M914 82V66', 914, 'is-fine'),
-    `<circle class="draw is-fine" pathLength="1" style="--d:1.12s" cx="914" cy="172" r="6"/>`,
+    `<circle class="draw is-fine" pathLength="1" data-x="914" style="--d:1.12s;--j:.3s" cx="914" cy="172" r="6"/>`,
     p('M934 300V238h7v-9h7v-9h7v-9h7v9h7v9h7v9h7V300', 958, 'is-solid'),
     p('M983 300V248h6v-8h6v-8h6v-8h6v8h6v8h6v8h6V300', 1004, 'is-solid'),
     // Paris: torre Eiffel
@@ -67,7 +71,7 @@ export function skyline(label, cities) {
     // Nice: colina, palmeira, sol e veleiro
     p('M1156 300Q1222 230 1296 300', 1226, 'is-far'),
     p('M1186 300Q1182 268 1188 240', 1186), palm(1188, 240, 0.62, false),
-    `<circle class="draw is-fine" pathLength="1" style="--d:1.42s" cx="1262" cy="206" r="13"/>`,
+    `<circle class="draw is-fine" pathLength="1" data-x="1262" style="--d:1.42s;--j:.3s" cx="1262" cy="206" r="13"/>`,
     p('M1236 290H1270L1264 300H1242ZM1253 290V254M1253 258L1268 286H1253', 1253),
     p('M1278 314q8 -5 16 0t16 0', 1290, 'is-fine'),
     // Raleigh: centro e um carvalho (City of Oaks)

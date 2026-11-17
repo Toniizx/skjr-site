@@ -244,7 +244,7 @@ function home(x) {
 
 <div class="marquee" aria-hidden="true" data-marquee>
   <div class="marquee__track">${[0, 1].map(() => `<div class="marquee__set">${C.services.map((s, i) =>
-    `<span class="marquee__item${i % 2 ? ' is-outline' : ''}">${t(s.name)}</span><span class="marquee__sep"></span>`).join('')}</div>`).join('')}</div>
+    `<span class="marquee__item${i % 2 ? ' is-alt' : ''}">${t(s.name)}</span><span class="marquee__sep"></span>`).join('')}</div>`).join('')}</div>
 </div>
 
 <section class="sec about" id="sobre">
@@ -392,11 +392,18 @@ ${cases.length ? `<section class="sec sec--white" id="cases">
           </li>`).join('\n          ')}
         </ul>
       </div>
-      <div class="people__group">
+      <div class="people__group people__group--team" data-team>
         <h3 class="people__h">${t('Equipe', 'Team', 'Équipe')}</h3>
-        <p class="people__areas">${t('Sete áreas trabalham juntas em cada entrega:', 'Seven areas work together on every delivery:', 'Sept pôles travaillent ensemble sur chaque livraison :')} ${t(C.areas)}.</p>
-        ${team.length ? `<ul class="people__list">
-          ${team.map(m => `<li class="person">
+        <div class="areas" role="group" aria-label="${t('Filtrar a equipe por área', 'Filter the team by area', 'Filtrer l’équipe par pôle')}" data-areas hidden>
+          <button type="button" class="area-btn" data-area="all" aria-pressed="true">${t('Todas as áreas', 'All areas', 'Tous les pôles')}</button>
+          ${C.departments.map(d => `<button type="button" class="area-btn" data-area="${d.id}" aria-pressed="false">${t(d.name)}</button>`).join('\n          ')}
+        </div>
+        <div class="area-info" aria-live="polite">
+          <p class="area-info__name" data-area-name>${t('Sete áreas, uma entrega', 'Seven areas, one delivery', 'Sept pôles, une livraison')}</p>
+          <p class="area-info__text" data-area-text>${t('Cada projeto passa por várias áreas da SKJR:', 'Every project goes through several SKJR areas:', 'Chaque projet passe par plusieurs pôles de SKJR :')} ${t(C.areas)}.</p>
+        </div>
+        ${team.length ? `<ul class="people__list people__list--team" data-team-list>
+          ${team.map(m => `<li class="person" data-area="${m.area || ''}">
             ${m.photo ? `<img class="person__ph" src="${x.rel(m.photo)}" alt="" loading="lazy">` : `<div class="person__ph person__ph--slot" aria-hidden="true">${t('foto', 'photo', 'photo')}</div>`}
             <p class="person__name">${t(m.name)} ${tag(m)}</p>
             <p class="person__role">${t(m.role)}</p>
@@ -597,7 +604,9 @@ function joinPage(x) {
   <div class="wrap spec">
     <div class="spec__block spec__block--wide">
       <h2 class="spec__h">${t('Onde você pode atuar', 'Where you can work', 'Où vous pouvez agir')}</h2>
-      <p class="spec__big">${t(C.areas)}.</p>
+      <ul class="depts">
+        ${C.departments.map(d => `<li class="dept"><h3 class="dept__name">${t(d.name)}</h3><p class="dept__text">${t(d.text)}</p></li>`).join('\n        ')}
+      </ul>
     </div>
   </div>
 </section>
@@ -648,6 +657,11 @@ function pageData(x) {
     },
   };
   if (key === 'home') {
+    data.areas = {
+      all: { name: t('Sete áreas, uma entrega', 'Seven areas, one delivery', 'Sept pôles, une livraison'),
+        text: `${t('Cada projeto passa por várias áreas da SKJR:', 'Every project goes through several SKJR areas:', 'Chaque projet passe par plusieurs pôles de SKJR :')} ${t(C.areas)}.` },
+      ...Object.fromEntries(C.departments.map(d => [d.id, { name: t(d.name), text: t(d.text) }])),
+    };
     data.diag = {
       sizes: Object.fromEntries(C.diag.sizes.map(s => [s.id, { label: t(s.label), note: t(s.note) }])),
       challenges: Object.fromEntries(C.diag.challenges.map(c => [c.id, { label: t(c.label), service: c.service }])),
@@ -679,6 +693,7 @@ function layout(x, { title, description, body }) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add('js')</script>
 <title>${title}</title>
 <meta name="description" content="${description}">
 <meta name="theme-color" content="#1E3FBD">
